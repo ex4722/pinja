@@ -1,36 +1,52 @@
-from pwn import * 
 from os import system
-from binaryninja import BinaryViewType, RegisterValueType, MediumLevelILOperation
 from binaryninja.debugger import DebuggerController
 import binaryninja
+import pwn
 
 
-binary = "a.out"
+class pinja(object):
+    def __init__(self, filename):
+        e = pwn.ELF(filename)
+        e.asm(e.entrypoint, "h: jmp h;nop;nop")
+        e.save("/tmp/" + filename)
+        self.filename =  "/tmp/" + filename
+        system(f"chmod +x {filename}")
+
+        self.p = pwn.process(filename)
+        ty = binaryninja.BinaryViewType.get_view_of_file(filename)
+        self.dbg = DebuggerController(ty)
+        if self.dbg.attach(self.p.pid):
+            print("ATTACHED")
+        else:
+            print("FAILED")
+        self.bv = self.dbg.live_view 
+        self.dbg.set_reg_value("rip", self.dbg.ip +2)
+        self.dbg.go()
 
 
+class inher(pwn.process):
+    def __init__(self, filename):
+        e = pwn.ELF(filename)
+        e.asm(e.entrypoint, "h: jmp h;nop;nop")
+        e.save("/tmp/" + filename)
 
-e = ELF(binary)
-e.asm(e.entrypoint, "h: jmp h;nop;nop")
-e.save("/tmp/" + binary)
-system("chmod +x /tmp/a.out")
+        self.filename =  "/tmp/" + filename
+        system(f"chmod +x {filename}")
 
-p = process("/tmp/" + binary)
-ti = BinaryViewType.get_view_of_file("./a.out")
+        super().__init__(filename)
 
-dbg = DebuggerController(ti)
+        ty = binaryninja.BinaryViewType.get_view_of_file(filename)
+        self.dc = DebuggerController(ty)
+        if self.dc.attach(self.pid):
+            print("ATTACHED")
+        else:
+            print("FAILED")
+        self.bv = self.dc.live_view 
+        self.dc.set_reg_value("rip", self.dc.ip +2)
 
+    def close(self): 
+        print("CLOSE CALLED")
+        super().close()
+        self.bv.file.close()
+        self.dc.destroy()
 
-if dbg.attach(p.pid):
-    print("ATTACHED")
-else:
-    print("FAILED")
-
-
-bv = dbg.live_view 
-
-
-dbg.set_reg_value("rip", dbg.ip +2)
-dbg.add_breakpoint(bv.symbols["main"][0].address)
-
-# Breaks at main
-dbg.go()
