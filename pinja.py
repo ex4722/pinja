@@ -26,21 +26,21 @@ import pwn
 
 class pinja(pwn.process):
     def __init__(self, filename):
-        self.e = pwn.ELF(filename)
-        self.e.asm(self.e.entrypoint, "h: jmp h;nop;nop")
-        self.e.save("/tmp/" + filename)
+        self.exe = pwn.ELF(filename)
+        self.exe.asm(self.exe.entrypoint, "h: jmp h;nop;nop")
+        self.exe.save("/tmp/" + filename)
 
         self.filename =  "/tmp/" + filename
         system(f"chmod +x {filename}")
 
         super().__init__(self.filename)
 
-        ty = binaryninja.BinaryViewType.get_view_of_file(filename)
-        self.dc = DebuggerController(ty)
+        bv  = binaryninja.BinaryViewType.get_view_of_file(filename)
+        self.dc = DebuggerController(bv)
         if self.dc.attach(self.pid):
-            print("ATTACHED")
+            pwn.info(f"Sucessfully Attached to process {self.pid}")
         else:
-            print("FAILED")
+            pwn.error(f"Error Attaching to process {self.pid}")
 
         self.bv = self.dc.live_view 
         self.dc.set_reg_value("rip", self.dc.ip +2)
@@ -49,4 +49,3 @@ class pinja(pwn.process):
         super().close()
         self.bv.file.close()
         self.dc.destroy()
-
