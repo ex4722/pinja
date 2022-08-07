@@ -4,27 +4,27 @@ import binaryninja
 import pwn
 
 
-class pinja(object):
-    def __init__(self, filename):
-        e = pwn.ELF(filename)
-        e.asm(e.entrypoint, "h: jmp h;nop;nop")
-        e.save("/tmp/" + filename)
-        self.filename =  "/tmp/" + filename
-        system(f"chmod +x {filename}")
+# class pinja(object):
+#     def __init__(self, filename):
+#         e = pwn.ELF(filename)
+#         e.asm(e.entrypoint, "h: jmp h;nop;nop")
+#         e.save("/tmp/" + filename)
+#         self.filename =  "/tmp/" + filename
+#         system(f"chmod +x {filename}")
 
-        self.p = pwn.process(filename)
-        ty = binaryninja.BinaryViewType.get_view_of_file(filename)
-        self.dbg = DebuggerController(ty)
-        if self.dbg.attach(self.p.pid):
-            print("ATTACHED")
-        else:
-            print("FAILED")
-        self.bv = self.dbg.live_view 
-        self.dbg.set_reg_value("rip", self.dbg.ip +2)
-        self.dbg.go()
+#         self.p = pwn.process(filename, aslr=False)
+#         ty = binaryninja.BinaryViewType.get_view_of_file(filename)
+#         self.dbg = DebuggerController(ty)
+#         if self.dbg.attach(self.p.pid):
+#             print("ATTACHED")
+#         else:
+#             print("FAILED")
+#         self.bv = self.dbg.live_view 
+#         self.dbg.set_reg_value("rip", self.dbg.ip +2)
+#         # self.dbg.go()
 
 
-class inher(pwn.process):
+class pinja(pwn.process):
     def __init__(self, filename):
         e = pwn.ELF(filename)
         e.asm(e.entrypoint, "h: jmp h;nop;nop")
