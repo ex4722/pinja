@@ -2,8 +2,9 @@ from os import system
 from binaryninja.debugger import DebuggerController
 import binaryninja
 import pwn
+from pwnlib.util import packing
 
-class pinja(pwn.process):
+class dc_process(pwn.process):
     def __init__(self, filename):
         """
         exe is pwn ELF object 
@@ -31,6 +32,11 @@ class pinja(pwn.process):
         self.bv = self.dc.live_view 
         self.dc.set_reg_value("rip", self.bv.entry_point +4)
         self.bv.write(self.bv.entry_point, pwn.asm("endbr64"))
+
+    def sendline(self, line=b''):
+        # Screw \n, If you want a newline put it in urself
+        line = packing._need_bytes(line)
+        self.send(line)
 
     def close(self): 
         super().close()
