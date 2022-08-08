@@ -42,3 +42,11 @@ class dc_process(pwn.process):
         super().close()
         self.bv.file.close()
         self.dc.destroy()
+
+
+# Mock everything
+def fake_debug(filename):
+    d = pwn.gdb.debug(filename)
+    d.dbg = Mock()
+    return d 
+
