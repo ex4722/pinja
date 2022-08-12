@@ -4,6 +4,7 @@ from binaryninja.debugger import DebuggerController
 import binaryninja
 import pwn
 from pwnlib.util import packing
+from time import sleep
 
 class ninja_process(pwn.process):
     def __init__(self, filename):
@@ -63,7 +64,7 @@ class ninja_process(pwn.process):
         self.bv.file.close()
         self.dbg.destroy()
 
-    def pause(self):
+    def _pint(self):
         if self.target_status.value == 1:
             self.execute_backend_command("process interrupt")
             return True
@@ -71,6 +72,13 @@ class ninja_process(pwn.process):
             # Already pause/breakpoint
             return False
 
+    def _cont(self):
+        self.execute_backend_command("continue")
+
+    def _dunno(self):
+        self._pint()
+        sleep(.3)
+        self._cont()
 
     # Custom Binja Stuff, mirrors gdb
     def add_breakpoint_sym(self, symbol : str):
@@ -79,6 +87,17 @@ class ninja_process(pwn.process):
             self.add_breakpoint( self.bv.symbols[symbol[0]][0].address + int(symbol[1]))
         else:
             self.add_breakpoint( self.bv.symbols[symbol][0].address )
+
+    def dump_regs(self, regs : list, hint=True, hexxed=True):
+        output = ""
+        for r in regs:
+            for a in self.regs:
+                if a.name == r:
+                    output += f"{r}: {hex(a.value) if hexxed else a.value} {'→  ' + a.hint if a.hint != '' and hint else ''}\n"
+        return output 
+    
+
+
 
 
 
@@ -92,4 +111,5 @@ def fake_debug(*args,**kwargs):
         setattr(d, attr, Mock())
     d.dbg = Mock()
     d.bv = Mock()
+    d.add_breakpoint_sym = Mock()
     return d 
