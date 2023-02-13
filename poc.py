@@ -1,8 +1,9 @@
 from pwn import * 
-from os import system
-from binaryninja import BinaryViewType, RegisterValueType, MediumLevelILOperation
+from os import pread, preadv, system
+from binaryninja import BinaryViewType, LowLevelILFcmpNe, RegisterValueType, MediumLevelILOperation
 from binaryninja.debugger import DebuggerController
 import binaryninja
+from pwnlib.elf.datatypes import elf_prpsinfo_64
 
 
 binary = "a.out"
